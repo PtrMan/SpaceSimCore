@@ -1,5 +1,6 @@
 #pragma once
 
+#include "hacks/EigenFixup.h"
 #include <eigen/Dense>
 
 #include "bindings/Array.h"
@@ -23,10 +24,10 @@ struct PhysicsBody {
 
 	Array<SharedPointer<AttachedForce>> attachedForces;
 
-	// TODO< make work>
 	ChangeCallbackCalculateInverse<InertiaTensorType> inertiaTensor;
 
 	PhysicsBody(const InertiaTensorType &parameterInertiaTensor) : inertiaTensor(parameterInertiaTensor) {};
 
-	// TODO< accessors for position and velocity >
+	VectorType &getPosition() const;
+	VectorType &getLinearVelocity() const;
 };

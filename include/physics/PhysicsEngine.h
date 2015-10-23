@@ -6,6 +6,7 @@
 #include "bindings/Array.h"
 #include "bindings/SharedPointer.h"
 
+#include "hacks/EigenFixup.h"
 #include <eigen/Dense>
 
 class PhysicsEngine {
