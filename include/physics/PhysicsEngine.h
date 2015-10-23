@@ -25,7 +25,12 @@ class PhysicsEngine {
 public:
 	PhysicsEngine();
 
+	void completeStep(const float timeDelta);
+
 	void step(const float timeDelta);
+
+	// transfers/calculates the new state
+	void postStep(const float timeDelta);
 
 	const Array<SharedPointer<CelestialBody>> &getCelestialBodies() const;
 

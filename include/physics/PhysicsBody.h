@@ -22,6 +22,8 @@ struct PhysicsBody {
 	VectorType angular; // TODO< use quaternoins? >
 	VectorType angularVelocity;
 
+	VectorType angularVelocityDelta;
+
 	Array<SharedPointer<AttachedForce>> attachedForces;
 
 	ChangeCallbackCalculateInverse<InertiaTensorType> inertiaTensor;

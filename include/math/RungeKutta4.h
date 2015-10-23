@@ -4,6 +4,14 @@ template<typename vectortype>
 struct RungeKutta4State {
   vectortype x;      // position
   vectortype v;      // velocity
+
+  vectortype nextX;
+  vectortype nextV;
+
+  void update() {
+    x = nextX;
+    v = nextV;
+  }
 };
 
 // needs to be implemented by the physics simulation which uses the RungeKutta4 solver
@@ -45,8 +53,8 @@ public:
     vectortype dxdt = ( a.dx + (b.dx + c.dx)*2.0f + d.dx ) * (1.0f / 6.0f);
     vectortype dvdt = ( a.dv + (b.dv + c.dv)*2.0f + d.dv ) * (1.0f / 6.0f);
 
-    state.x = state.x + dxdt * dt;
-    state.v = state.v + dvdt * dt;
+    state.nextX = state.x + dxdt * dt;
+    state.nextV = state.v + dvdt * dt;
   }
   
   IAcceleration<vectortype> *acceleration;

@@ -26,9 +26,16 @@ PhysicsEngine::PhysicsEngine() {
 	static_cast<AccelerationImplementation*>(rungeKutta4.acceleration)->setPhysicsEngine(this);
 }
 
+void PhysicsEngine::completeStep(const float timeDelta) {
+	step(timeDelta);
+	postStep(timeDelta);
+}
+
 void PhysicsEngine::step(const float timeDelta) {
 	for( int index = 0; index < physicsBodies.getCount(); index++ ) {
 		SharedPointer<PhysicsBody> currentBody = physicsBodies[index];
+
+		currentBody->angularVelocityDelta = Eigen::Matrix<double, 3, 1>(0.0, 0.0, 0.0);
 
 		// TODO< put into method >
 
@@ -42,14 +49,26 @@ void PhysicsEngine::step(const float timeDelta) {
 			Eigen::Matrix<double, 3, 1> appliedTorque = calculateTorque(currentAttachedForce->objectLocalPosition, angularComponentForce);
 			Eigen::Matrix<double, 3, 1> rotationalAcceleration = calculateRotationalAcceleration(currentBody->inertiaTensor, appliedTorque);
 
-			currentBody->angularVelocity += (rotationalAcceleration * timeDelta);
+			currentBody->angularVelocityDelta += (rotationalAcceleration * timeDelta);
 		}
 
 		
 		static_cast<AccelerationImplementation*>(rungeKutta4.acceleration)->setCurrentBodyMass(currentBody->mass);
 		rungeKutta4.integrate(currentBody->rungeKuttaState, 0.0, static_cast<double>(timeDelta));
 
+		
+	}
+}
+
+void PhysicsEngine::postStep(const float timeDelta) {
+	for( int index = 0; index < physicsBodies.getCount(); index++ ) {
+		SharedPointer<PhysicsBody> currentBody = physicsBodies[index];
+
+		currentBody->angularVelocity += currentBody->angularVelocityDelta;
+
 		currentBody->angular += (currentBody->angularVelocity * timeDelta);
+
+		currentBody->rungeKuttaState.update();
 	}
 }
 
