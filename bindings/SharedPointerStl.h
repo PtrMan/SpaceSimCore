@@ -16,6 +16,7 @@ public:
 
 	SharedPointer &operator=(const SharedPointer &rhs) {
 		ptr = rhs.ptr;
+		return *this;
 	}
 
 	Type *operator->() {
