@@ -32,4 +32,8 @@ struct PhysicsBody {
 
 	VectorType &getPosition() const;
 	VectorType &getLinearVelocity() const;
+
+	// hard because it can do weird things to the physics engine, be careful!
+	void setLinearVelocityHard(const VectorType &linearVelocity);
+	void setPositionHard(const VectorType &position);
 };
