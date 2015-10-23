@@ -7,6 +7,10 @@ using namespace std;
 template<typename Type>
 class SharedPointer {
 public:
+	SharedPointer(Type *pointer) {
+		ptr = shared_ptr<Type>(pointer);
+	}
+
 	SharedPointer &operator=(const SharedPointer &rhs) {
 		ptr = rhs.ptr;
 	}
