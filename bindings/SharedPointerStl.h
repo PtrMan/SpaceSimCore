@@ -7,6 +7,9 @@ using namespace std;
 template<typename Type>
 class SharedPointer {
 public:
+	SharedPointer() {
+	}
+
 	SharedPointer(Type *pointer) {
 		ptr = shared_ptr<Type>(pointer);
 	}
