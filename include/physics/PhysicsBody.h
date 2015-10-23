@@ -30,8 +30,8 @@ struct PhysicsBody {
 
 	PhysicsBody(const InertiaTensorType &parameterInertiaTensor) : inertiaTensor(parameterInertiaTensor) {};
 
-	VectorType &getPosition() const;
-	VectorType &getLinearVelocity() const;
+	const VectorType &getPosition() const;
+	const VectorType &getLinearVelocity() const;
 
 	// hard because it can do weird things to the physics engine, be careful!
 	void setLinearVelocityHard(const VectorType &linearVelocity);

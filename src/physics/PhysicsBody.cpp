@@ -1,17 +1,19 @@
 #include "physics/PhysicsBody.h"
 
-VectorType &PhysicsBody::getPosition() const {
+const PhysicsBody::VectorType &PhysicsBody::getPosition() const {
 	return rungeKuttaState.x;
 }
 
-VectorType &PhysicsBody::getLinearVelocity() const {
+const PhysicsBody::VectorType &PhysicsBody::getLinearVelocity() const {
 	return rungeKuttaState.v;
 }
 
-void PhysicsBody::setLinearVelocityHard(const VectorType &linearVelocity) {
+void PhysicsBody::setLinearVelocityHard(const PhysicsBody::VectorType &linearVelocity) {
 	rungeKuttaState.v = linearVelocity;
 }
 
-void PhysicsBody::setPositionHard(const VectorType &position) {
+void PhysicsBody::setPositionHard(const PhysicsBody::VectorType &position) {
 	rungeKuttaState.x = position;
 }
+
+

@@ -7,7 +7,7 @@ project (SpaceSimCore)
 include_directories(${EIGEN_INCLUDE})
 include_directories(${SpaceSimCore_SOURCE_DIR}/include)
 
-add_library(SpaceSimCore src/physics/PhysicsEngine.cpp)
+add_library(SpaceSimCore src/physics/PhysicsEngine.cpp src/physics/PhysicsBody.cpp)
 
 add_custom_target(
     copyBindings
