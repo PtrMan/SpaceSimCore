@@ -14,6 +14,10 @@ public:
 	Type *operator->() {
 		return ptr.operator->();
 	}
+
+	const Type *operator->() const {
+		return ptr.operator->();
+	}
 	
 
 	bool operator==(const SharedPointer &rhs) const {
