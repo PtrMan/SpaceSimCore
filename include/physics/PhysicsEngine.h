@@ -1,3 +1,5 @@
+#pragma once
+
 #include "physics/PhysicsBody.h"
 #include "physics/CelestialBody.h"
 
