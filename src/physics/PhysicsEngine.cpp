@@ -92,3 +92,11 @@ void PhysicsEngine::addCelestialBody(SharedPointer<CelestialBody> celestialBody)
 void PhysicsEngine::removeCelestialBody(SharedPointer<CelestialBody> celestialBody) {
 	celestialBodies.remove(celestialBody);
 }
+
+void PhysicsEngine::addFastParticle(SharedPointer<FastParticle> particle) {
+	fastParticles.add(particle);
+}
+
+void PhysicsEngine::removeFastParticle(SharedPointer<FastParticle> particle) {
+	fastParticles.remove(particle);
+}
