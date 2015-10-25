@@ -58,6 +58,12 @@ void PhysicsEngine::step(const float timeDelta) {
 
 		
 	}
+
+	for( int index = 0; index < fastParticles.getCount(); index++ ) {
+		SharedPointer<FastParticle> currentParticle = fastParticles[index];
+
+		currentParticle->nextCurrentPosition = currentParticle->currentPosition + (currentParticle->velocity * timeDelta);
+	}
 }
 
 void PhysicsEngine::postStep(const float timeDelta) {
@@ -69,6 +75,13 @@ void PhysicsEngine::postStep(const float timeDelta) {
 		currentBody->angular += (currentBody->angularVelocity * timeDelta);
 
 		currentBody->rungeKuttaState.update();
+	}
+
+	for( int index = 0; index < fastParticles.getCount(); index++ ) {
+		SharedPointer<FastParticle> currentParticle = fastParticles[index];
+
+		currentParticle->previousPosition = currentParticle->currentPosition;
+		currentParticle->currentPosition = currentParticle->nextCurrentPosition;
 	}
 }
 
