@@ -1,44 +1,128 @@
 #pragma once
 
+#include "memory/FixedAllocator.h"
+
 #include <iostream>
 
 #include <eigen/Dense>
 
 template<typename Type>
 struct SimplexSolver {
+	struct Variable {
+		enum class EnumType {
+			NAMEME, // TODO< name me >
+			LASTLINE, // TODO< give proper name >
+			UNUSED
+		};
+
+		Variable() {
+			this->type = EnumType::UNUSED;
+		}
+
+		Variable(EnumType type, int identifier) {
+			this->type = type;
+			this->identifier = identifier;
+		}
+
+		int identifier;
+		EnumType type;
+	};
+
+	struct Result {
+		enum class EnumSolverState {
+			FOUNDSOLUTION,
+			UNBOUNDEDSOLUTION,
+			TOOMANYITERATIONS
+		};
+
+		Result(Result::EnumSolverState state) {
+			this->state = state;
+		}
+
+		Result::EnumSolverState state;
+		
+	};
+
 	Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic> matrix;
 
-	// see https://www.youtube.com/watch?v=Axg9OhJ4cjg (german)   bottom row is negative unlike in the video
+	static const unsigned SizeOfVariableArray = 256;
 
-	// TODO< handle special cases >
+	// FIXME< not fixed size allocator for special cases >
+	FixedAllocator<SizeOfVariableArray, Variable> variables;
 
-	void iterate() {
+	SimplexSolver() {};
+
+	// see https://www.youtube.com/watch?v=Axg9OhJ4cjg (german)           bottom row is negative unlike in the video
+	// see http://de.slideshare.net/itsmedv91/special-cases-in-simplex    special cases
+
+	// TODO< handle other special cases >
+
+
+	Result iterate() {
+		setupVariables();
+
+
+
+		// for now we use a iteration counter to protect us from infinite loops
+		// TODO< implement loop detection scheme, basic idea
+		//       * we manage a fixed sized array as a sliding window or the hashes of the operations
+		//       * if we detect a loop we apply bland's rule to resolve it (is the rule detection realy neccesary?)
+		//
+		//
+		//       * every operation (pivot column, pivot row, number of pivot element itself) gets an hash
+		//       * at each iteration we subtract the previous hash and add the current hash
+		//       * if the hash doesn't change in n iteration(where n == 2 for the simple loop) we are looping
+		// >
+
+		// TODO< implement https://en.wikipedia.org/wiki/Bland's_rule >
+
+		unsigned iterationCounter = 0;
+		const unsigned MaximalIterationCounter = 128;
+
 		for(;;) {
+			iterationCounter++;
+			if( iterationCounter > MaximalIterationCounter ) {
+				return Result(Result::EnumSolverState::TOOMANYITERATIONS);
+			}
+
 			bool foundMaximumColumn;
 
 			const int pivotColumnIndex = searchMinimumColumn(foundMaximumColumn);
 			// all values in the target value row are < 0.0, done
 			if( !foundMaximumColumn ) {
-				std::cout << "no found!" << std::endl;
-				break;
+				return Result(Result::EnumSolverState::FOUNDSOLUTION);
 			}
 
-			std::cout << "min column " << pivotColumnIndex << std::endl;
+			//std::cout << "min column " << pivotColumnIndex << std::endl;
+
+			if( areAllEntriesOfPivotColumnNegativeOrZero(pivotColumnIndex) ) {
+				// solution is unbounded
+
+				return Result(Result::EnumSolverState::UNBOUNDEDSOLUTION);
+			}
 
 			// divide numbers of pivot column with right side and store in temporary vector
-			Eigen::Matrix<Type, Eigen::Dynamic, 1> temporaryVector = divideRightSideWithPivotColumnWhereAboveZero(pivotColumnIndex);
-			const int minIndexOfTargetFunctionCoefficient = getMinIndexOfVector(temporaryVector);
+			Eigen::Matrix<Type, Eigen::Dynamic, 1> minRatioVector = divideRightSideWithPivotColumnWhereAboveZero(pivotColumnIndex);
+
+			//std::cout << "temporary vector" << std::endl;
+			//std::cout << minRatioVector << std::endl;
+
+			const int minIndexOfTargetFunctionCoefficient = getMinIndexOfMinRatioVector(minRatioVector);
+			const bool positiveMinRatioExists = doesPositiveMinRatioExist(minRatioVector);
+			if( !positiveMinRatioExists ) {
+				// solution is unbounded
+
+				return Result(Result::EnumSolverState::UNBOUNDEDSOLUTION);
+			}
+
 			const int pivotRowIndex = minIndexOfTargetFunctionCoefficient;
 
-			std::cout << "pivotRowIndex " << pivotRowIndex << std::endl;
+			//std::cout << "pivotRowIndex " << pivotRowIndex << std::endl;
 
 			Type pivotElement = matrix(pivotRowIndex, pivotColumnIndex);
 
 			// divide the pivot row with the pivot element
 			matrix.block(pivotRowIndex,0, 1, matrix.cols()) /= pivotElement;
-
-			//std::cout << "after   divide the pivot row with the pivot element " << std::endl;
-			//std::cout << matrix << std::endl;
 
 			// TODO< assert that pivot elemnt is roughtly 1.0 >
 
@@ -52,18 +136,22 @@ struct SimplexSolver {
 				}
 
 				Type iterationElementAtPivotColumn = matrix(pivotRowIteration, pivotColumnIndex);
-				matrix.block(pivotRowIteration,0, 1, matrix.cols()) -= (matrix.block(pivotRowIndex, 0, 1, matrix.cols()) * iterationElementAtPivotColumn);
+				matrix.block(pivotRowIteration, 0, 1, matrix.cols()) -= (matrix.block(pivotRowIndex, 0, 1, matrix.cols()) * iterationElementAtPivotColumn);
 			}
 
-			// TODO< set the variable identifier for the pivot element >
+			// set the variable identifier that we know which row of the matrix is for which variable
+			variables[pivotRowIndex] = Variable(Variable::EnumType::NAMEME, pivotColumnIndex);
 
-
-			std::cout << matrix << std::endl;
+			//std::cout << matrix << std::endl;
 			
 		}
 	}
 
 protected:
+	void setupVariables() {
+		// TODO
+	}
+
 	int searchMinimumColumn(bool &foundMinimumColumn) {
 		foundMinimumColumn = false;
 
@@ -102,17 +190,29 @@ protected:
 		return result;
 	}
 
-	static int getMinIndexOfVector(const Eigen::Matrix<Type, Eigen::Dynamic, 1> &vector) {
-		Type min = vector(0);
-		int minIndex = 0;
-
-		for( int index = 1; index < vector.rows(); index++ ) {
-			if( vector(index) < min ) {
-				min = vector(index);
-				minIndex = 0;
+	bool areAllEntriesOfPivotColumnNegativeOrZero(const int pivotColumnIndex) {
+		for( int rowIndex = 0; rowIndex < matrix.rows()-1; rowIndex++ ) {
+			if( matrix(rowIndex, pivotColumnIndex) > static_cast<Type>(0.0) ) {
+				return false;
 			}
 		}
 
-		return minIndex;
+		return true;
+	}
+
+	static int getMinIndexOfMinRatioVector(const Eigen::Matrix<Type, Eigen::Dynamic, 1> &vector) {
+		int index;
+		vector.minCoeff(&index);
+		return index;
+	}
+
+	static bool doesPositiveMinRatioExist(const Eigen::Matrix<Type, Eigen::Dynamic, 1> &vector) {
+		for( int i = 0; i < vector.rows(); i++ ) {
+			if( vector(i) > static_cast<Type>(0.0) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 };
