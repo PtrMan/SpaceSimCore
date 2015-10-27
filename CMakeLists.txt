@@ -21,6 +21,8 @@ target_link_libraries(testPerformanceFastParticles SpaceSimCore)
 
 
 # TODO -march=native or the processor -march=corei7
-#set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wshadow   -ffast-math -O3 -funroll-loops -ftree-vectorize")
+#set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wshadow   -ffast-math -O3 -funroll-loops -ftree-vectorize  -fno-math-errno -fomit-frame-pointer -flto")
+## TOTEST<does this land in the link flags?> set(CMAKE_EXE_LINKER_FLAGS "-O3 -flto")
+
 set(CMAKE_CXX_FLAGS "-std=c++11 -g -Wall -Wextra -Wshadow   -ffast-math -O2 -funroll-loops -ftree-vectorize")
 #set(CMAKE_CXX_FLAGS "-std=c++11   -O0 -g")
