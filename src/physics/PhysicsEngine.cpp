@@ -2,6 +2,8 @@
 
 #include "physics/Angular.hpp"
 
+#include "collision/SphereRayHelper.hpp"
+
 void PhysicsEngine::AccelerationImplementation::setPhysicsEngine(PhysicsEngine *physicsEngine) {
 	this->physicsEngine = physicsEngine;
 }
@@ -13,7 +15,7 @@ Eigen::Matrix<double, 3, 1> PhysicsEngine::AccelerationImplementation::calculate
 		// TODO< calculate squared distance and calculate inverse force, add it to the result force
 	}
 
-	const Eigen::Matrix<double, 3, 1> acceleration =temporaryForce / currentBodyMass;
+    const Eigen::Matrix<double, 3, 1> acceleration = temporaryForce / currentBodyMass;
 	return acceleration;
 }
 
@@ -32,38 +34,8 @@ void PhysicsEngine::completeStep(const float timeDelta) {
 }
 
 void PhysicsEngine::step(const float timeDelta) {
-	for( int index = 0; index < physicsBodies.getCount(); index++ ) {
-		SharedPointer<PhysicsBody> currentBody = physicsBodies[index];
-
-		currentBody->angularVelocityDelta = Eigen::Matrix<double, 3, 1>(0.0, 0.0, 0.0);
-
-		// TODO< put into method >
-
-		for( int attachedForceIterator = 0; attachedForceIterator < currentBody->attachedForces.getCount(); attachedForceIterator++ ) {
-			SharedPointer<AttachedForce> currentAttachedForce = currentBody->attachedForces[attachedForceIterator];
-	
-			// TODO< split each force into linear and angular components >
-
-			Eigen::Matrix<double, 3, 1> angularComponentForce = currentAttachedForce->forceInNewton;
-
-			Eigen::Matrix<double, 3, 1> appliedTorque = calculateTorque(currentAttachedForce->objectLocalPosition, angularComponentForce);
-			Eigen::Matrix<double, 3, 1> rotationalAcceleration = calculateRotationalAcceleration(currentBody->inertiaTensor, appliedTorque);
-
-			currentBody->angularVelocityDelta += (rotationalAcceleration * timeDelta);
-		}
-
-		
-		static_cast<AccelerationImplementation*>(rungeKutta4.acceleration)->setCurrentBodyMass(currentBody->mass);
-		rungeKutta4.integrate(currentBody->rungeKuttaState, 0.0, static_cast<double>(timeDelta));
-
-		
-	}
-
-	for( int index = 0; index < fastParticles.getCount(); index++ ) {
-		SharedPointer<FastParticle> currentParticle = fastParticles[index];
-
-		currentParticle->nextCurrentPosition = currentParticle->currentPosition + (currentParticle->velocity * timeDelta);
-	}
+    calcForcesAndReactionsForRigidBodies(timeDelta);
+	collisionTestFastParticles();
 }
 
 void PhysicsEngine::postStep(const float timeDelta) {
@@ -89,6 +61,62 @@ const Array<SharedPointer<CelestialBody>> &PhysicsEngine::getCelestialBodies() c
 	return celestialBodies;
 }
 
+void PhysicsEngine::collisionTestFastParticles() {
+    raySphereRelative.resizeToSizeIfRequiredWithBatchSize(fastParticles.getCount(), SphereRayHelper::batchSize);
+
+    Array<int> collisionTestResult;
+    collisionTestResult.setNumberOfElements(fastParticles.getCount(), false);
+
+
+    for( int index = 0; index < physicsBodies.getCount(); index++ ) {
+        SharedPointer<PhysicsBody> currentBody = physicsBodies[index];
+
+        // TODO< radius for body >
+        float collisionSphereRadius = 0.0f;
+
+        SphereRayHelper::transferFastParticlesToRaySphereSoa(fastParticles, collisionSphereRadius, currentBody->getPosition(), raySphereRelative);
+        SphereRayHelper::doBatchedCollisionTests(raySphereRelative);
+        SphereRayHelper::checkForCollisions(raySphereRelative, fastParticles, collisionTestResult);
+
+        // TODO< process the collision test result >
+    }
+}
+
+void PhysicsEngine::calcForcesAndReactionsForRigidBodies(float timeDelta) {
+    for( int index = 0; index < physicsBodies.getCount(); index++ ) {
+        SharedPointer<PhysicsBody> currentBody = physicsBodies[index];
+
+        currentBody->angularVelocityDelta = Eigen::Matrix<double, 3, 1>(0.0, 0.0, 0.0);
+
+        // TODO< put into method >
+
+        for( int attachedForceIterator = 0; attachedForceIterator < currentBody->attachedForces.getCount(); attachedForceIterator++ ) {
+            SharedPointer<AttachedForce> currentAttachedForce = currentBody->attachedForces[attachedForceIterator];
+
+            // TODO< split each force into linear and angular components >
+
+            Eigen::Matrix<double, 3, 1> angularComponentForce = currentAttachedForce->forceInNewton;
+
+            Eigen::Matrix<double, 3, 1> appliedTorque = calculateTorque(currentAttachedForce->objectLocalPosition, angularComponentForce);
+            Eigen::Matrix<double, 3, 1> rotationalAcceleration = calculateRotationalAcceleration(currentBody->inertiaTensor, appliedTorque);
+
+            currentBody->angularVelocityDelta += (rotationalAcceleration * timeDelta);
+        }
+
+
+        static_cast<AccelerationImplementation*>(rungeKutta4.acceleration)->setCurrentBodyMass(currentBody->mass);
+        rungeKutta4.integrate(currentBody->rungeKuttaState, 0.0, static_cast<double>(timeDelta));
+
+
+    }
+
+    // TODO< put into own method >
+    for( int index = 0; index < fastParticles.getCount(); index++ ) {
+        SharedPointer<FastParticle> currentParticle = fastParticles[index];
+
+        currentParticle->nextCurrentPosition = currentParticle->currentPosition + (currentParticle->velocity * timeDelta);
+    }
+}
 
 void PhysicsEngine::addPhysicsBody(SharedPointer<PhysicsBody> physicsBody) {
 	physicsBodies.add(physicsBody);

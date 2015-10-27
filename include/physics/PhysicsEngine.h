@@ -4,6 +4,8 @@
 #include "physics/CelestialBody.h"
 #include "physics/FastParticle.hpp"
 
+#include "collision/RaySphereRelativeStructureOfArrays.hpp"
+
 #include "math/RungeKutta4.h"
 
 #include "bindings/Array.h"
@@ -51,6 +53,11 @@ public:
 	void addFastParticle(SharedPointer<FastParticle> particle);
 	void removeFastParticle(SharedPointer<FastParticle> particle);
 protected:
+	void collisionTestFastParticles();
+
+    void calcForcesAndReactionsForRigidBodies(float timeDelta);
+
+
     // NOT IMPLEMENTED
     // see https://en.wikipedia.org/wiki/Collision_response#Impulse-Based_Reaction_Model
     static float calcReactionImpulseMagnitude(
@@ -73,5 +80,7 @@ protected:
 	Array<SharedPointer<FastParticle>> fastParticles;
 
 	RungeKutta4<Eigen::Matrix<double, 3, 1>> rungeKutta4;
+
+    RaySphereRelativeStructureOfArrays raySphereRelative;
 };
 

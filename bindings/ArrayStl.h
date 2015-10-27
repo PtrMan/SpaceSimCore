@@ -15,6 +15,12 @@ public:
 		return data[i];
 	}
 
+	
+	const Type &operator[](int i) const {
+		return data[i];
+	}
+
+
 	void add(Type &element) {
 		data.push_back(element);
 	}
@@ -29,6 +35,12 @@ public:
 
 		// TODO< throw something >
 	}
+
+	void setNumberOfElements(unsigned size, bool allowShirking) {
+		// we ignore shirking
+		data.resize(size);
+	}
+
 
 private:
 	vector<Type> data;

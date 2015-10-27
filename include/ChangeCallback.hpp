@@ -7,13 +7,17 @@
 // * recalculating normals, inverse of matrix, etc
 template<typename Type>
 class ChangeCallback {
-	public: ChangeCallback(const Type &value) {
-		set(value);
+    public: ChangeCallback() {
+    }
+    /*
+    protected: ChangeCallback(const Type &value) {
+        this->set(value);
 	}
+    */
 
 	public: void set(const Type &value) {
 		currentValue = value;
-		changed();
+        this->changed();
 	}
 
 	public: Type get() {

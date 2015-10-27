@@ -28,7 +28,9 @@ struct PhysicsBody {
 
 	ChangeCallbackCalculateInverse<InertiaTensorType> inertiaTensor;
 
-	PhysicsBody(const InertiaTensorType &parameterInertiaTensor) : inertiaTensor(parameterInertiaTensor) {};
+    PhysicsBody(const InertiaTensorType &parameterInertiaTensor) {
+        inertiaTensor.set(parameterInertiaTensor);
+    }
 
 	const VectorType &getPosition() const;
 	const VectorType &getLinearVelocity() const;

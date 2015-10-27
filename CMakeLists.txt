@@ -7,7 +7,7 @@ project (SpaceSimCore)
 include_directories(${EIGEN_INCLUDE})
 include_directories(${SpaceSimCore_SOURCE_DIR}/include)
 
-add_library(SpaceSimCore src/physics/PhysicsEngine.cpp src/physics/PhysicsBody.cpp)
+add_library(SpaceSimCore src/physics/PhysicsEngine.cpp src/physics/PhysicsBody.cpp src/physics/InertiaHelper.cpp   src/collision/SphereRayHelper.cpp src/collision/RaySphereRelativeStructureOfArrays.cpp    src/math/RaySphere.cpp    src/memory/SmartRawMemory.cpp)
 
 add_custom_target(
     copyBindings
@@ -15,4 +15,12 @@ add_custom_target(
 )
 add_dependencies(SpaceSimCore copyBindings)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wshadow")
+add_executable(testPerformanceFastParticles tests/performance/PerformanceFastParticles.cpp)
+target_link_libraries(testPerformanceFastParticles SpaceSimCore)
+
+
+
+# TODO -march=native or the processor -march=corei7
+#set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wshadow   -ffast-math -O3 -funroll-loops -ftree-vectorize")
+set(CMAKE_CXX_FLAGS "-std=c++11 -g -Wall -Wextra -Wshadow   -ffast-math -O2 -funroll-loops -ftree-vectorize")
+#set(CMAKE_CXX_FLAGS "-std=c++11   -O0 -g")
