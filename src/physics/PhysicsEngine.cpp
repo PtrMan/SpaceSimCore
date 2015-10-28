@@ -15,8 +15,8 @@ Eigen::Matrix<double, 3, 1> PhysicsEngine::AccelerationImplementation::calculate
 	for( int index = 0; index < physicsEngine->getCelestialBodies().getCount(); index++ ) {
         SharedPointer<CelestialBody> currentCelestialBody = physicsEngine->getCelestialBodies()[index];
 
-        double distance = (state.x - currentCelestialBody->position).norm();
-        Eigen::Matrix<double, 3, 1> forceDirection = (state.x - currentCelestialBody->position).normalized();
+        double distance = (-(state.x - currentCelestialBody->position)).norm();
+        Eigen::Matrix<double, 3, 1> forceDirection = (-(state.x - currentCelestialBody->position)).normalized();
         double force = Orbit::calculateForceBetweenObjectsByDistance(currentBodyMass, currentCelestialBody->mass, distance);
 
         temporaryForce += (forceDirection * force);
