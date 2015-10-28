@@ -4,4 +4,6 @@
 
 struct CelestialBody {
 	Eigen::Matrix<double, 3, 1> position;
+
+    double mass;
 };

@@ -3,6 +3,7 @@
 #include "physics/Angular.hpp"
 
 #include "collision/SphereRayHelper.hpp"
+#include "celestialMathematics/Orbit.h"
 
 void PhysicsEngine::AccelerationImplementation::setPhysicsEngine(PhysicsEngine *physicsEngine) {
 	this->physicsEngine = physicsEngine;
@@ -12,7 +13,13 @@ Eigen::Matrix<double, 3, 1> PhysicsEngine::AccelerationImplementation::calculate
 	Eigen::Matrix<double, 3, 1> temporaryForce = Eigen::Matrix<double, 3, 1>(0.0, 0.0, 0.0);
 
 	for( int index = 0; index < physicsEngine->getCelestialBodies().getCount(); index++ ) {
-		// TODO< calculate squared distance and calculate inverse force, add it to the result force
+        SharedPointer<CelestialBody> currentCelestialBody = physicsEngine->getCelestialBodies()[index];
+
+        double distance = (state.x - currentCelestialBody->position).norm();
+        Eigen::Matrix<double, 3, 1> forceDirection = (state.x - currentCelestialBody->position).normalized();
+        double force = Orbit::calculateForceBetweenObjectsByDistance(currentBodyMass, currentCelestialBody->mass, distance);
+
+        temporaryForce += (forceDirection * force);
 	}
 
     const Eigen::Matrix<double, 3, 1> acceleration = temporaryForce / currentBodyMass;

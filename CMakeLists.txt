@@ -7,7 +7,7 @@ project (SpaceSimCore)
 include_directories(${EIGEN_INCLUDE})
 include_directories(${SpaceSimCore_SOURCE_DIR}/include)
 
-add_library(SpaceSimCore src/physics/PhysicsEngine.cpp src/physics/PhysicsBody.cpp src/physics/InertiaHelper.cpp   src/collision/SphereRayHelper.cpp src/collision/RaySphereRelativeStructureOfArrays.cpp    src/math/RaySphere.cpp    src/memory/SmartRawMemory.cpp)
+add_library(SpaceSimCore src/physics/PhysicsEngine.cpp src/physics/PhysicsBody.cpp src/physics/InertiaHelper.cpp       src/collision/SphereRayHelper.cpp src/collision/RaySphereRelativeStructureOfArrays.cpp    src/math/RaySphere.cpp    src/memory/SmartRawMemory.cpp           src/celestialMathematics/StarGeneration.cpp src/celestialMathematics/Orbit.cpp src/celestialMathematics/HohmannTransfer.cpp)
 
 add_custom_target(
     copyBindings
