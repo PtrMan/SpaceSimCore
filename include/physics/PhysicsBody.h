@@ -18,6 +18,9 @@ struct PhysicsBody {
 
 	double mass;
 
+
+    float boundingSphereRadius;
+
 	RungeKutta4State<VectorType> rungeKuttaState;
 	VectorType angular; // TODO< use quaternoins? >
 	VectorType angularVelocity;
@@ -28,9 +31,7 @@ struct PhysicsBody {
 
 	ChangeCallbackCalculateInverse<InertiaTensorType> inertiaTensor;
 
-    PhysicsBody(const InertiaTensorType &parameterInertiaTensor) {
-        inertiaTensor.set(parameterInertiaTensor);
-    }
+    PhysicsBody(const InertiaTensorType &parameterInertiaTensor);
 
 	const VectorType &getPosition() const;
 	const VectorType &getLinearVelocity() const;

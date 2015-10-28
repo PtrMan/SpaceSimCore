@@ -39,22 +39,9 @@ void PhysicsEngine::step(const float timeDelta) {
 }
 
 void PhysicsEngine::postStep(const float timeDelta) {
-	for( int index = 0; index < physicsBodies.getCount(); index++ ) {
-		SharedPointer<PhysicsBody> currentBody = physicsBodies[index];
-
-		currentBody->angularVelocity += currentBody->angularVelocityDelta;
-
-		currentBody->angular += (currentBody->angularVelocity * timeDelta);
-
-		currentBody->rungeKuttaState.update();
-	}
-
-	for( int index = 0; index < fastParticles.getCount(); index++ ) {
-		SharedPointer<FastParticle> currentParticle = fastParticles[index];
-
-		currentParticle->previousPosition = currentParticle->currentPosition;
-		currentParticle->currentPosition = currentParticle->nextCurrentPosition;
-	}
+    postStepCheckFastParticlesCollisions();
+    postStepUpdatePhysicsBodies(timeDelta);
+    postStepUpdateFastParticles();
 }
 
 const Array<SharedPointer<CelestialBody>> &PhysicsEngine::getCelestialBodies() const {
@@ -71,14 +58,22 @@ void PhysicsEngine::collisionTestFastParticles() {
     for( int index = 0; index < physicsBodies.getCount(); index++ ) {
         SharedPointer<PhysicsBody> currentBody = physicsBodies[index];
 
-        // TODO< radius for body >
-        float collisionSphereRadius = 0.0f;
+        float collisionSphereRadius = currentBody->boundingSphereRadius;
 
         SphereRayHelper::transferFastParticlesToRaySphereSoa(fastParticles, collisionSphereRadius, currentBody->getPosition(), raySphereRelative);
         SphereRayHelper::doBatchedCollisionTests(raySphereRelative);
         SphereRayHelper::checkForCollisions(raySphereRelative, fastParticles, collisionTestResult);
 
-        // TODO< process the collision test result >
+        // process the collision test result
+        for( int collisionTestResultIndex = 0; collisionTestResultIndex < fastParticles.getCount(); collisionTestResultIndex++ ) {
+            if( collisionTestResult[collisionTestResultIndex] != 0 ) {
+                fastParticles[collisionTestResultIndex]->nextHitAnything = true;
+                fastParticles[collisionTestResultIndex]->nextHitBody = currentBody;
+
+                // NOTE< for now just against/for the bounding sphere >
+                // TODO< calculate the hit position? >
+            }
+        }
     }
 }
 
@@ -118,6 +113,43 @@ void PhysicsEngine::calcForcesAndReactionsForRigidBodies(float timeDelta) {
     }
 }
 
+void PhysicsEngine::postStepCheckFastParticlesCollisions() {
+    // iterate over all FastParticles and call Callback if it collided with something
+
+    for( int index = 0; index < fastParticles.getCount(); index++ ) {
+        SharedPointer<FastParticle> currentParticle = fastParticles[index];
+
+        if( currentParticle->nextHitAnything ) {
+            // call collision callback
+            CollisionCallback::Source source;
+            source.type = CollisionCallback::Source::EnumType::FASTPARTICLE;
+            source.fastParticle = currentParticle;
+            collisionCallback->call(currentParticle->nextHitBody, source);
+        }
+    }
+}
+
+void PhysicsEngine::postStepUpdatePhysicsBodies(const float timeDelta) {
+    for( int index = 0; index < physicsBodies.getCount(); index++ ) {
+        SharedPointer<PhysicsBody> currentBody = physicsBodies[index];
+
+        currentBody->angularVelocity += currentBody->angularVelocityDelta;
+
+        currentBody->angular += (currentBody->angularVelocity * timeDelta);
+
+        currentBody->rungeKuttaState.update();
+    }
+}
+
+void PhysicsEngine::postStepUpdateFastParticles() {
+    for( int index = 0; index < fastParticles.getCount(); index++ ) {
+        SharedPointer<FastParticle> currentParticle = fastParticles[index];
+
+        currentParticle->previousPosition = currentParticle->currentPosition;
+        currentParticle->currentPosition = currentParticle->nextCurrentPosition;
+    }
+}
+
 void PhysicsEngine::addPhysicsBody(SharedPointer<PhysicsBody> physicsBody) {
 	physicsBodies.add(physicsBody);
 }
@@ -140,4 +172,8 @@ void PhysicsEngine::addFastParticle(SharedPointer<FastParticle> particle) {
 
 void PhysicsEngine::removeFastParticle(SharedPointer<FastParticle> particle) {
 	fastParticles.remove(particle);
+}
+
+void PhysicsEngine::setCollisionCallback(SharedPointer<CollisionCallback> collisionCallback) {
+    this->collisionCallback = collisionCallback;
 }

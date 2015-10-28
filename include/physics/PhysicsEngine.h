@@ -3,6 +3,7 @@
 #include "physics/PhysicsBody.h"
 #include "physics/CelestialBody.h"
 #include "physics/FastParticle.hpp"
+#include "physics/CollisionCallback.hpp"
 
 #include "collision/RaySphereRelativeStructureOfArrays.hpp"
 
@@ -52,10 +53,16 @@ public:
 
 	void addFastParticle(SharedPointer<FastParticle> particle);
 	void removeFastParticle(SharedPointer<FastParticle> particle);
+
+    void setCollisionCallback(SharedPointer<CollisionCallback> collisionCallback);
 protected:
 	void collisionTestFastParticles();
 
     void calcForcesAndReactionsForRigidBodies(float timeDelta);
+
+    void postStepCheckFastParticlesCollisions();
+    void postStepUpdatePhysicsBodies(const float timeDelta);
+    void postStepUpdateFastParticles();
 
 
     // NOT IMPLEMENTED
@@ -82,5 +89,7 @@ protected:
 	RungeKutta4<Eigen::Matrix<double, 3, 1>> rungeKutta4;
 
     RaySphereRelativeStructureOfArrays raySphereRelative;
+
+    SharedPointer<CollisionCallback> collisionCallback;
 };
 

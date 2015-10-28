@@ -1,5 +1,10 @@
 #include "physics/PhysicsBody.h"
 
+PhysicsBody::PhysicsBody(const InertiaTensorType &parameterInertiaTensor) {
+    inertiaTensor.set(parameterInertiaTensor);
+    boundingSphereRadius = 0.0f;
+}
+
 const PhysicsBody::VectorType &PhysicsBody::getPosition() const {
 	return rungeKuttaState.x;
 }
